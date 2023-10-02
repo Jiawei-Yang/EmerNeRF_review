@@ -1,0 +1,17 @@
+{
+    "python.formatting.provider": "none",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.analysis.typeCheckingMode": "off",
+    "files.exclude": {
+        "**/__pycache__": true
+    },
+    "editor.formatOnSave": true,
+    "python.linting.enabled": false,
+    "files.watcherExclude": {
+        "data/*": true,
+        "work_dirs/*": true
+    },
+    "terminal.integrated.scrollback": 5000
+}

@@ -1,0 +1,7 @@
+base: "configs/hash_default_config.yaml"
+nerf:
+  model:
+    head:
+      enable_dynamic_branch: true # whether to use dynamic head
+      enable_shadow_head: true # whether to use shadow field
+      enable_flow_branch: false # whether to use another flow encoder

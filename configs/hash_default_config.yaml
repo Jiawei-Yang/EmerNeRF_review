@@ -1,0 +1,163 @@
+data:
+  data_root: data/waymo_processed/training
+  load_size: [640, 960] # [height, width]
+  downscale: 1 # downscale factor in the eval mode
+  num_cams: 3
+  sequence_idx: 245 # which sequence to use, [0, 798] for train and [0, 199] for val in waymo dataset, inclusive
+  start_timestamp: 0 # which timestamp to start from, typically between [0, 170]
+  num_timestamps: -1 # how many tiemstamps are used, -1 means all timestamps
+  ray_batch_size: 8192 # we only sample this many rays per batch for target rendering
+  preload_device: cuda # choose from ["cpu", "cuda"]
+  target_dino_dim: 64 # if not null, we will use pca to reduce the dimension of dino features to this value
+  load_rgb: True
+  load_lidar: True
+  load_sky_mask: True
+  load_dino: False
+  load_dynamic_mask: True
+  skip_dino_model: False # whether to skip loading dino model for feature extraction
+  test_holdout: 10 # Use every Nth timestamp for the test set, if 0, use all images for training and none for testing
+  lidar:
+    only_use_top_lidar: False
+    only_use_first_return: True
+    only_keep_rays_on_images: False
+  dino_model_type: dino_vitb8 # the dino model to use, I use dino_vitb8 for dinov1 and dinov2_vitb14 for dinov2
+  dino_stride: 8 # 8 for v1, and 7 for v2
+  # for waymo, [640, 960] for v1, [644, 966] for v2
+  dino_extraction_size: [640, 960]
+  sampler:
+    buffer_downscale: 32 # downscale factor for the buffer wrt the input image
+    buffer_ratio: 0.25 # how many samples to use from the buffer
+nerf:
+  estimator:
+    type: "propnet" # only propnet is supported for now
+    propnet: # proposal networks hyperparameters
+      num_samples_per_prop: [128, 64]
+      near_plane: 0.1
+      far_plane: 1000.0
+      sampling_type: uniform_lindisp # choose from "uniform_lindisp", "uniform", "lindisp", "sqrt", "log"
+      enable_anti_aliasing_level_loss: True
+      anti_aliasing_pulse_width: [0.03, 0.003]
+      xyz_encoder:
+        type: HashEncoder
+        n_input_dims: 3
+        n_levels_per_prop: [8, 8]
+        base_resolutions_per_prop: [16, 16]
+        max_resolutions_per_prop: [512, 2048]
+        lgo2_hashmap_sizes_per_prop: [20, 20]
+        n_features_per_level: 1
+  sampling:
+    num_samples: 64
+    enable_coarse_to_fine_ray_sampling: True # gradually sample rays on 1/4 resolution to full resolution
+  model:
+    xyz_encoder:
+      type: HashEncoder
+      n_input_dims: 3
+      n_levels: 10
+      n_features_per_level: 4
+      base_resolution: 16
+      max_resolution: 8192
+      log2_hashmap_size: 20
+    dynamic_xyz_encoder: 
+      type: HashEncoder
+      n_input_dims: 4
+      n_levels: 10
+      n_features_per_level: 4
+      base_resolution: 16
+      max_resolution: 8192
+      log2_hashmap_size: 18
+    neck:
+      base_mlp_layer_width: 64
+      geometry_feature_dim: 64
+      semantic_feature_dim: 64
+    head:
+      head_mlp_layer_width: 64
+      # ======= appearance ======= #
+      enable_cam_embedding: False # whether to use camera embedding
+      enable_img_embedding: True # whether to use image embedding
+      appearance_embedding_dim: 16 # appearance embedding dimension for each camera or image
+      # ========== sky =========== #
+      enable_sky_head: True
+      # ========== dino ========== #
+      enable_dino_head: False # whether to use dino embedding
+      dino_embedding_dim: 64 # 384 for dino_small, 768 for dino_base
+      dino_mlp_layer_width: 64 # number of hidden units in dino head
+      # learnable PE maps
+      enable_learnable_pe: False
+      # ======= dynamic ======== #
+      enable_dynamic_branch: False # whether to use dynamic head
+      # shadow head
+      enable_shadow_head: False # whether to use shadow field
+      # interpolation
+      interpolate_xyz_encoding: True
+      # ======= flow =========== #
+      enable_flow_branch: False
+      enable_temporal_interpolation: False
+    scene:
+      aabb: [-20.0, -40.0, 0, 80.0, 40.0, 20.0]
+      unbounded: True
+      auto_aabb_based_on_lidar: True # will override the aabb above
+      lidar_downsample_ratio: 4 # downsample lidar by this factor to compute percentile
+      lidar_percentile: 0.02
+render:
+  render_chunk_size: 8192
+  render_novel_trajectory: False
+  fps: 24
+  render_low_res: True
+  render_full: True
+  render_test: True
+  low_res_downscale: 4
+supervision:
+  rgb:
+    loss_type: l2 # choose from ["l1", "smooth_l1", "l2"]
+    loss_coef: 1.0
+  depth:
+    loss_type: l2
+    loss_coef: 1.0
+    upper_bound: 80.0
+    depth_percentile: null
+    line_of_sight:
+      enable: True
+      loss_type: "my" # choose from ["streetsurf", "my"]
+      loss_coef: 0.1 # how about 0.01?
+      start_iter: 1000
+      start_epsilon: 3.0
+      end_epsilon: 0.75
+      decay_steps: 5000
+      decay_rate: 0.5
+  sky:
+    loss_type: opacity_based
+    loss_coef: 0.001
+  dino:
+    loss_type: l2
+    loss_coef: 0.5
+  dynamic:
+    loss_type: sparsity
+    loss_coef: 0.01
+    entropy_loss_skewness: 1.1
+  shadow:
+    loss_type: sparsity
+    loss_coef: 0.01
+optim:
+  num_iters: 25000
+  weight_decay: 1e-5
+  lr: 0.01
+  seed: 0 # random seed
+  check_nan: False # whether to check nan
+  cache_rgb_freq: 1000 # how often to cache the error map
+logging:
+  vis_freq: 2000
+  print_freq: 200 # how often to print training stats
+  saveckpt_freq: 10000 # how often to save checkpoints
+  save_html: False # whether to save html visualization of voxels
+  save_seperate_video: True # whether to save seperate video for each key
+voxel_visualization:
+  vis_voxel_size: 0.2 # voxel size for occupancy visualization
+  vis_density_threshold: 0.7 # density threshold for occupancy visualization
+  vis_aabb: [-10, -50, -5, 150, 50, 15] # aabb for occupancy visualization
+  vis_query_key: "encoded_features" # choose from 'dino_feat', 'encoded_features'
+resume_from: null # path to a checkpoint to resume from
+lidar_evaluation:
+  eval_lidar: True
+  eval_lidar_id: 0 # 0: TOP, 1: FRONT, 2: SIDE_LEFT, 3: SIDE_RIGHT, 4: REAR
+  render_rays_on_image_only: True
+  save_lidar_simulation: True

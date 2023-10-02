@@ -1,0 +1,35 @@
+# from dinov2: https://github.com/facebookresearch/dinov2/blob/main/requirements.txt
+--extra-index-url https://download.pytorch.org/whl/cu117
+torch==2.0.0
+torchvision==0.15.0
+omegaconf
+torchmetrics==0.10.3
+fvcore
+iopath
+xformers==0.0.18
+submitit
+--extra-index-url https://pypi.nvidia.com
+cuml-cu11
+
+# dev
+black==22.6.0
+
+# custom
+tensorboard
+wandb
+matplotlib
+plotly
+imageio
+imageio[ffmpeg]
+lpips
+timm
+opencv-python
+pyquaternion
+scikit-image
+vedo
+chamferdist
+
+# Waymo Open Dataset dependencies
+waymo-open-dataset-tf-2-6-0
+protobuf==3.20.0
+immutabledict
