@@ -89,9 +89,9 @@ nerf:
       enable_shadow_head: False # whether to use shadow field
       # interpolation
       interpolate_xyz_encoding: True
+      enable_temporal_interpolation: False
       # ======= flow =========== #
       enable_flow_branch: False
-      enable_temporal_interpolation: False
     scene:
       aabb: [-20.0, -40.0, 0, 80.0, 40.0, 20.0]
       unbounded: True
@@ -150,11 +150,6 @@ logging:
   saveckpt_freq: 10000 # how often to save checkpoints
   save_html: False # whether to save html visualization of voxels
   save_seperate_video: True # whether to save seperate video for each key
-voxel_visualization:
-  vis_voxel_size: 0.2 # voxel size for occupancy visualization
-  vis_density_threshold: 0.7 # density threshold for occupancy visualization
-  vis_aabb: [-10, -50, -5, 150, 50, 15] # aabb for occupancy visualization
-  vis_query_key: "encoded_features" # choose from 'dino_feat', 'encoded_features'
 resume_from: null # path to a checkpoint to resume from
 lidar_evaluation:
   eval_lidar: True

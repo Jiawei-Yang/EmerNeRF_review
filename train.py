@@ -255,9 +255,7 @@ def do_evaluation(
     proposal_networks: Optional[List[DensityField]] = None,
     prop_estimator: PropNetEstimator = None,
     dataset: WaymoSequenceLoader = None,
-    device: torch.device = None,
     args: argparse.Namespace = None,
-    voxel_vis_fn: Optional[Callable] = None,
 ):
     logger.info("Evaluating on the full set...")
     model.eval()
@@ -350,11 +348,6 @@ def do_evaluation(
         logger.info("Lidar evaluation done!")
         del render_results
         torch.cuda.empty_cache()
-
-    if cfg.logging.save_html:
-        logger.info("Visualizing voxels...")
-        voxel_vis_fn(cfg, model, proposal_networks, dataset.full_set, device=device)
-        logger.info("Visualization done!")
 
     if cfg.data.load_rgb:
         logger.info("Evaluating Pixels...")
@@ -701,7 +694,6 @@ def main(args):
             proposal_networks=proposal_networks,
             prop_estimator=prop_estimator,
             dataset=dataset,
-            device=device,
             args=args,
         )
         exit()
@@ -1329,7 +1321,6 @@ def main(args):
         proposal_networks=proposal_networks,
         prop_estimator=prop_estimator,
         dataset=dataset,
-        device=device,
         args=args,
     )
     if args.enable_wandb:
