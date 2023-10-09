@@ -1,5 +1,10 @@
 # EmerNeRF_review
 
+## Project website
+
+Anonymized for review:
+[https://emernerfxyz.github.io/](https://emernerfxyz.github.io/)
+
 ### Dataset split
 
 For Waymo Open Dataset, we first sort the scenes' string names in alphabetical order, store them at `data/waymo_train_list.txt`, and then use the line number - 1 as the scene index. The split of NOTR is as follows:
